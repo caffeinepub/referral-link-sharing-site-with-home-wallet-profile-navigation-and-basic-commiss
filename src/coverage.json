@@ -1,0 +1,29 @@
+{
+  "kind": "coverage_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-05T19:58:04.038Z",
+  "sources": {
+    "buildRequest": true,
+    "implementationPlan": true
+  },
+  "requirements": {
+    "total": 0,
+    "implemented": 0,
+    "items": []
+  },
+  "changedFiles": [
+    "backend/main.mo",
+    "build-request.json",
+    "feature_evidence.json",
+    "frontend-file-summaries.txt",
+    "frontend-implementation-plan.json",
+    "frontend/src/app/auth/useIsAdmin.ts",
+    "frontend/src/app/tasks/AddTaskDialog.tsx",
+    "frontend/src/app/tasks/TasksSection.tsx",
+    "frontend/src/app/tasks/useAvailableTasks.ts",
+    "project_state.json",
+    "scratch/component-selection.json",
+    "spec.md",
+    "spec_vs_diff_report.json"
+  ]
+}
