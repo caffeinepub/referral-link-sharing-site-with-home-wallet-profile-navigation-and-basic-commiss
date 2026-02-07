@@ -28,7 +28,7 @@ export default function RequestPayoutDialog({ open, onOpenChange }: RequestPayou
   const requestPayoutMutation = useRequestPayout();
 
   const handleSubmit = async () => {
-    if (!profile?.upi) {
+    if (!profile?.upi || profile.upi.trim() === '') {
       toast.error('Please set your UPI ID in Profile first');
       return;
     }
@@ -50,7 +50,8 @@ export default function RequestPayoutDialog({ open, onOpenChange }: RequestPayou
       setAmount('');
       onOpenChange(false);
     } catch (error: any) {
-      toast.error(error.message || 'Failed to request payout');
+      const errorMessage = error.message || 'Failed to request payout';
+      toast.error(errorMessage);
     }
   };
 
@@ -70,7 +71,7 @@ export default function RequestPayoutDialog({ open, onOpenChange }: RequestPayou
             <div className="text-2xl font-bold">{formatAmount(balance)}</div>
           </div>
 
-          {profile?.upi ? (
+          {profile?.upi && profile.upi.trim() !== '' ? (
             <div className="space-y-2">
               <Label>UPI ID</Label>
               <div className="text-sm text-muted-foreground">{profile.upi}</div>
@@ -89,7 +90,7 @@ export default function RequestPayoutDialog({ open, onOpenChange }: RequestPayou
               placeholder="Enter amount"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              disabled={!profile?.upi}
+              disabled={!profile?.upi || profile.upi.trim() === ''}
             />
           </div>
         </div>
@@ -100,7 +101,7 @@ export default function RequestPayoutDialog({ open, onOpenChange }: RequestPayou
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={requestPayoutMutation.isPending || !profile?.upi}
+            disabled={requestPayoutMutation.isPending || !profile?.upi || profile.upi.trim() === ''}
           >
             {requestPayoutMutation.isPending ? (
               <>

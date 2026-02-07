@@ -1,10 +1,64 @@
 {
   "kind": "build_request",
-  "title": "Untitled request",
+  "title": "Add Google AdSense via reusable ad components rendered globally in the content area",
   "priority": "normal",
-  "requirements": [],
-  "constraints": [],
-  "nonGoals": [],
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "text": "Create reusable Google AdSense React components that can be used across the app, including (a) a component that ensures the AdSense script is loaded only once per page load using the provided script tag, and (b) a reusable ad slot component that renders an <ins class=\"adsbygoogle\"> element with configurable props (e.g., ad client, slot id, format, responsive) and triggers adsbygoogle rendering safely.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "recent-13",
+          "recent-14",
+          "recent-15"
+        ],
+        "quotes": [
+          "Add reusable ad components",
+          "All pages",
+          "Content area"
+        ]
+      },
+      "acceptanceCriteria": [
+        "A reusable component exists to load the AdSense script once using: <script async src=\"https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8182684208705293\" crossorigin=\"anonymous\"></script>.",
+        "A reusable AdSlot component exists that can be placed multiple times without crashing the app (guards against missing window.adsbygoogle and multiple pushes).",
+        "No backend changes are required for these components."
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "text": "Render the AdSense components globally across the app in the main content area on all pages/sections, so that ads are inserted within the <main> content flow (not in the HTML <head>). Ensure this global insertion applies to both the standard section-based UI and the referral redirect route.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "recent-12",
+          "recent-13",
+          "recent-14",
+          "recent-15"
+        ],
+        "quotes": [
+          "All pages",
+          "Content area",
+          "Add reusable ad components",
+          "Build now"
+        ]
+      },
+      "acceptanceCriteria": [
+        "When navigating between sections (home/tasks/wallet/profile), the ad rendering remains within the main scrollable content area (inside the app layout’s <main>).",
+        "When visiting the referral redirect route (currentSection starting with \"r/\"), the page still includes the content-area ad insertion without interfering with redirect behavior.",
+        "The AdSense script is not duplicated on navigation; it is loaded once per browser page load."
+      ]
+    }
+  ],
+  "constraints": [
+    "Do not edit any files under frontend/immutablePaths: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, frontend/src/components/ui.",
+    "Keep all user-facing text in English."
+  ],
+  "nonGoals": [
+    "Setting up or verifying Google AdSense account approval, ad inventory, or payment configuration.",
+    "Implementing specific ad unit IDs/slots beyond providing a reusable slot component API (unless already available in the project).",
+    "Adding any backend (Motoko) support for ads or routing ad rendering through the canister."
+  ],
   "imageRequirements": {
     "required": [],
     "edits": []

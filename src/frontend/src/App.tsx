@@ -8,7 +8,6 @@ import WalletSection from './app/wallet/WalletSection';
 import ProfileSection from './app/profile/ProfileSection';
 import TasksSection from './app/tasks/TasksSection';
 import ReferralRedirect from './app/referral/ReferralRedirect';
-import AuthGate from './app/auth/AuthGate';
 import { useSectionRouter } from './app/navigation/useSectionRouter';
 
 export default function App() {
@@ -29,26 +28,10 @@ export default function App() {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <BottomNavLayout currentSection={currentSection} onNavigate={navigateToSection}>
-        {currentSection === 'home' && (
-          <AuthGate>
-            <HomeSection />
-          </AuthGate>
-        )}
-        {currentSection === 'tasks' && (
-          <AuthGate>
-            <TasksSection />
-          </AuthGate>
-        )}
-        {currentSection === 'wallet' && (
-          <AuthGate>
-            <WalletSection />
-          </AuthGate>
-        )}
-        {currentSection === 'profile' && (
-          <AuthGate>
-            <ProfileSection />
-          </AuthGate>
-        )}
+        {currentSection === 'home' && <HomeSection />}
+        {currentSection === 'tasks' && <TasksSection />}
+        {currentSection === 'wallet' && <WalletSection />}
+        {currentSection === 'profile' && <ProfileSection />}
       </BottomNavLayout>
       <Toaster />
     </ThemeProvider>

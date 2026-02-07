@@ -1,4 +1,48 @@
 {
   "kind": "feature_evidence_report",
-  "features": []
+  "features": [
+    {
+      "featureId": "feature-create-reusable-google-adsense-react-components-that-can-be-used-across-the-app-including-a-a-component-that-ensures-the-adsense-script-is-loaded-only-once-per-page-load-using-the-provided-script-tag-and-b-a-reusable-ad-slot-component-that-renders-an-ins-class-adsbygoogle-element-with-configurable-props-e-g-ad-client-slot-id-format-responsive-and-triggers-adsbygoogle-rendering-safely",
+      "featureTitle": "Create reusable Google AdSense React components that can be used across the app, including (a) a component that ensures the AdSense script is loaded only once per page load using the provided script tag, and (b) a reusable ad slot component that renders an <ins class=\"adsbygoogle\"> element with configurable props (e.g., ad client, slot id, format, responsive) and triggers adsbygoogle rendering safely.",
+      "files": [
+        "frontend/src/app/ads/AdSenseScript.tsx",
+        "frontend/src/app/ads/AdSlot.tsx",
+        "frontend/src/app/ads/GlobalContentAds.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "user-approval@3.0.0"
+      ],
+      "testIds": [
+        "REQ-1"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-render-the-adsense-components-globally-across-the-app-in-the-main-content-area-on-all-pages-sections-so-that-ads-are-inserted-within-the-main-content-flow-not-in-the-html-head-ensure-this-global-insertion-applies-to-both-the-standard-section-based-ui-and-the-referral-redirect-route",
+      "featureTitle": "Render the AdSense components globally across the app in the main content area on all pages/sections, so that ads are inserted within the <main> content flow (not in the HTML <head>). Ensure this global insertion applies to both the standard section-based UI and the referral redirect route.",
+      "files": [
+        "frontend/src/app/layout/BottomNavLayout.tsx",
+        "frontend/src/app/referral/ReferralRedirect.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "user-approval@3.0.0"
+      ],
+      "testIds": [
+        "REQ-2"
+      ],
+      "confidence": "high"
+    }
+  ]
 }

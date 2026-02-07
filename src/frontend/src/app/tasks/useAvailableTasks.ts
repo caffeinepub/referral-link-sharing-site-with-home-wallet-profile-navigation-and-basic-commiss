@@ -43,3 +43,18 @@ export function useAddTask() {
     },
   });
 }
+
+export function useBulkAddTasks() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (tasks: Task[]) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.bulkAddTasks(tasks);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['availableTasks'] });
+    },
+  });
+}

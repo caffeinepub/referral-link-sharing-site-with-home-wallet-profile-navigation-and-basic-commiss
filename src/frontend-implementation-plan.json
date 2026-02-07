@@ -1,6 +1,59 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Untitled request",
-  "requirements": []
+  "title": "Google AdSense reusable components and global content-area rendering",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "summary": "Add reusable AdSense script-loader and ad slot React components with safe, repeatable rendering behavior.",
+      "acceptanceCriteria": [
+        "A reusable component exists to load the AdSense script once using: <script async src=\"https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8182684208705293\" crossorigin=\"anonymous\"></script>.",
+        "A reusable AdSlot component exists that can be placed multiple times without crashing the app (guards against missing window.adsbygoogle and multiple pushes).",
+        "No backend changes are required for these components."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/app/ads/AdSenseScript.tsx",
+          "operation": "create",
+          "description": "Create a reusable AdSenseScript component that injects the provided AdSense script into the document body (not head) and guarantees it is loaded only once per browser page load (e.g., module-level singleton/flag and DOM id check)."
+        },
+        {
+          "path": "frontend/src/app/ads/AdSlot.tsx",
+          "operation": "create",
+          "description": "Create a reusable AdSlot component that renders an <ins class=\"adsbygoogle\"> with configurable props (ad client, slot id, format, responsive, etc.) and safely triggers rendering (guards for missing window, missing adsbygoogle, try/catch around push, and prevents duplicate push per mount)."
+        },
+        {
+          "path": "frontend/src/app/ads/GlobalContentAds.tsx",
+          "operation": "create",
+          "description": "Create a small wrapper component intended for layout usage that composes AdSenseScript + one or more AdSlot placements and includes a safe no-op/disabled path when slot configuration is absent to avoid runtime errors while still keeping the insertion point in the <main> content flow."
+        }
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "summary": "Render AdSense globally inside the app’s <main> content area for all sections and for the referral redirect route without duplicating script loads.",
+      "acceptanceCriteria": [
+        "When navigating between sections (home/tasks/wallet/profile), the ad rendering remains within the main scrollable content area (inside the app layout’s <main>).",
+        "When visiting the referral redirect route (currentSection starting with \"r/\"), the page still includes the content-area ad insertion without interfering with redirect behavior.",
+        "The AdSense script is not duplicated on navigation; it is loaded once per browser page load."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/app/layout/BottomNavLayout.tsx",
+          "operation": "modify",
+          "description": "Insert GlobalContentAds inside the existing <main> element so ads are part of the main scrollable content flow across all standard sections (home/tasks/wallet/profile), and ensure placement does not interfere with existing layout padding/scroll behavior."
+        },
+        {
+          "path": "frontend/src/app/referral/ReferralRedirect.tsx",
+          "operation": "modify",
+          "description": "Wrap the referral redirect UI in a <main>-based content container and include GlobalContentAds within that main flow so the referral route also gets content-area ad insertion while preserving existing redirect behavior and states."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Ensure the referral redirect rendering path still results in ads being rendered within a <main> content flow (via the ReferralRedirect changes) and confirm no additional AdSense script duplication occurs during section navigation."
+        }
+      ]
+    }
+  ]
 }

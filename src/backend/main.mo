@@ -1,30 +1,26 @@
 import Map "mo:core/Map";
-import Set "mo:core/Set";
 import Array "mo:core/Array";
-import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
-import Order "mo:core/Order";
+import Principal "mo:core/Principal";
 import Time "mo:core/Time";
+import Nat "mo:core/Nat";
 import AccessControl "authorization/access-control";
 import MixinAuthorization "authorization/MixinAuthorization";
+import UserApproval "user-approval/approval";
 
-// Fix persistent state and migration logic
 actor {
   // Persistent state
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
 
-  let referralLinks = Map.empty<Principal, Set.Set<ReferralLink>>();
-  let users = Map.empty<Principal, UserProfile>();
-  let payoutRequests = Map.empty<Principal, Set.Set<PayoutRequest>>();
-  let balances = Map.empty<Principal, Nat>();
-  let availableTasks = Map.empty<Text, Task>(); // Store tasks
+  let approvalState = UserApproval.initState(accessControlState);
 
-  module ReferralLink {
-    public func compare(link1 : ReferralLink, link2 : ReferralLink) : Order.Order {
-      Text.compare(link1.title, link2.title);
-    };
-  };
+  let referralLinks = Map.empty<Principal, Map.Map<Nat, ReferralLink>>();
+  let users = Map.empty<Principal, UserProfile>();
+  let payoutRequests = Map.empty<Principal, Map.Map<Nat, PayoutRequest>>();
+  let balances = Map.empty<Principal, Nat>();
+  let availableTasks = Map.empty<Text, Task>();
+  let payoutRequestCounter = Map.empty<Principal, Nat>();
 
   type ReferralLink = {
     title : Text;
@@ -33,27 +29,13 @@ actor {
     created : Time.Time;
   };
 
-  let commissionThreshold = 1000;
-
-  module PayoutRequest {
-    public func compare(request1 : PayoutRequest, request2 : PayoutRequest) : Order.Order {
-      Int.compare(request1.amount, request2.amount);
-    };
-  };
+  let commissionThreshold = 1000; // Set your threshold value here
 
   type PayoutRequest = {
+    id : Nat;
     amount : Nat;
     status : { #pending; #approved; #rejected };
     created : Time.Time;
-  };
-
-  module UserProfile {
-    public func compare(profile1 : UserProfile, profile2 : UserProfile) : Order.Order {
-      switch (Text.compare(profile1.name, profile2.name)) {
-        case (#equal) { Text.compare(profile1.upi, profile2.upi) };
-	      case (order) { order };
-      };
-    };
   };
 
   public type UserProfile = {
@@ -67,8 +49,6 @@ actor {
     reward : ?Nat;
   };
 
-
-  // Profile management functions matching required API
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can view profiles");
@@ -90,36 +70,34 @@ actor {
     users.add(caller, profile);
   };
 
-  // Admin-only check for frontend
   public query ({ caller }) func isAdmin() : async Bool {
-    AccessControl.isAdmin(accessControlState, caller)
+    AccessControl.isAdmin(accessControlState, caller);
   };
 
-  // Referral link management (Admin-only)
   public shared ({ caller }) func createReferralLink(
     title : Text,
     destinationUrl : Text,
-    commission : ?Nat
+    commission : ?Nat,
   ) : async () {
-    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
       Runtime.trap("Unauthorized: Only admins can create referral links");
     };
 
     let newLink : ReferralLink = {
-      title;
       destinationUrl;
       commission;
+      title;
       created = Time.now();
     };
 
     switch (referralLinks.get(caller)) {
       case (null) {
-        let newSet = Set.empty<ReferralLink>();
-        newSet.add(newLink);
-        referralLinks.add(caller, newSet);
+        let newLinks = Map.empty<Nat, ReferralLink>();
+        newLinks.add(newLinks.size(), newLink);
+        referralLinks.add(caller, newLinks);
       };
-      case (?existingSet) {
-        existingSet.add(newLink);
+      case (?existingLinks) {
+        existingLinks.add(existingLinks.size(), newLink);
       };
     };
   };
@@ -131,15 +109,15 @@ actor {
 
     switch (referralLinks.get(caller)) {
       case (null) { [] };
-      case (?links) {
-        links.toArray().map(func(link) { link });
-      };
+      case (?links) { links.values().toArray().map(func(link) { link }) };
     };
   };
 
-  // Public endpoint for tracking clicks from shared referral URLs
-  // No authentication required - visitors can be anonymous
-  public shared func trackReferralClick(user : Principal, linkTitle : Text) : async () {
+  public shared ({ caller }) func trackReferralClick(user : Principal, linkTitle : Text) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can track referral clicks");
+    };
+
     switch (referralLinks.get(user)) {
       case (null) { Runtime.trap("No referral links found") };
       case (?links) {
@@ -171,7 +149,6 @@ actor {
     };
   };
 
-  // Wallet management
   public query ({ caller }) func getBalance() : async Nat {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can view balance");
@@ -188,6 +165,10 @@ actor {
       Runtime.trap("Unauthorized: Only users can request payouts");
     };
 
+    if (amount < commissionThreshold) {
+      Runtime.trap("Payout amount must be at least " # commissionThreshold.toText());
+    };
+
     let currentBalance = switch (balances.get(caller)) {
       case (null) { 0 };
       case (?balance) { balance };
@@ -197,90 +178,117 @@ actor {
       Runtime.trap("Insufficient balance for payout request");
     };
 
+    switch (users.get(caller)) {
+      case (null) { Runtime.trap("User profile not found. Please create a profile first!") };
+      case (?profile) {
+        if (profile.upi == "") {
+          Runtime.trap("A valid UPI ID is required to initiate the payout request.");
+        };
+      };
+    };
+
+    let currentCounter = switch (payoutRequestCounter.get(caller)) {
+      case (null) { 0 };
+      case (?counter) { counter };
+    };
+
     let newRequest : PayoutRequest = {
+      id = currentCounter + 1;
       amount;
       status = #pending;
       created = Time.now();
     };
 
+    payoutRequestCounter.add(caller, currentCounter + 1);
+
     switch (payoutRequests.get(caller)) {
       case (null) {
-        let newRequestSet = Set.empty<PayoutRequest>();
-        newRequestSet.add(newRequest);
-        payoutRequests.add(caller, newRequestSet);
+        let newRequestMap = Map.empty<Nat, PayoutRequest>();
+        newRequestMap.add(newRequest.id, newRequest);
+        payoutRequests.add(caller, newRequestMap);
       };
       case (?existingRequests) {
-        existingRequests.add(newRequest);
+        existingRequests.add(newRequest.id, newRequest);
       };
     };
 
     balances.add(caller, currentBalance - amount);
   };
 
-  // Admin-only payout management
-  public shared ({ caller }) func approvePayoutRequest(user : Principal, requestIndex : Nat) : async () {
-    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+  func doGetUserPayoutRequests(user : Principal) : ?[PayoutRequest] {
+    payoutRequests.get(user).map(
+      func(requests) {
+        requests.values().toArray();
+      }
+    );
+  };
+
+  public query ({ caller }) func getUserPayoutRequests(user : Principal) : async ?[PayoutRequest] {
+    if (caller != user and not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Can only view your own payout requests");
+    };
+    doGetUserPayoutRequests(user);
+  };
+
+  public query ({ caller }) func getMyPayoutRequests() : async ?[PayoutRequest] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can view payout requests");
+    };
+    doGetUserPayoutRequests(caller);
+  };
+
+  public query ({ caller }) func getAllPayoutRequests() : async [(Principal, [PayoutRequest])] {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can view all payout requests");
+    };
+
+    let toArrayResult = payoutRequests.toArray();
+    toArrayResult.map(
+      func((user, requests)) {
+        let requestArray = requests.values().toArray();
+        (user, requestArray);
+      }
+    );
+  };
+
+  public shared ({ caller }) func approvePayoutRequest(user : Principal, requestId : Nat) : async () {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
       Runtime.trap("Unauthorized: Only admins can approve payouts");
     };
 
     switch (payoutRequests.get(user)) {
       case (null) { Runtime.trap("No payout requests found for user") };
       case (?requests) {
-        let requestsArray = requests.toArray().sort();
-        if (requestIndex >= requestsArray.size()) {
-          Runtime.trap("Invalid request index");
+        switch (requests.get(requestId)) {
+          case (null) { Runtime.trap("Payout request not found") };
+          case (?request) {
+            requests.add(requestId, { request with status = #approved });
+          };
         };
-
-        let updatedRequests = requestsArray.map(
-          func(req) {
-            switch (requestsArray.findIndex(func(x) { x == req })) {
-              case (?i) {
-                if (i == requestIndex) { { req with status = #approved } } else { req };
-              };
-              case (null) { req };
-            };
-          }
-        );
-
-        requests.clear();
-        updatedRequests.forEach(func(req) { requests.add(req) });
       };
     };
   };
 
-  public shared ({ caller }) func rejectPayoutRequest(user : Principal, requestIndex : Nat) : async () {
-    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+  public shared ({ caller }) func rejectPayoutRequest(user : Principal, requestId : Nat) : async () {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
       Runtime.trap("Unauthorized: Only admins can reject payouts");
     };
 
     switch (payoutRequests.get(user)) {
       case (null) { Runtime.trap("No payout requests found for user") };
       case (?requests) {
-        let requestsArray = requests.toArray().sort();
-        if (requestIndex >= requestsArray.size()) {
-          Runtime.trap("Invalid request index");
+        switch (requests.get(requestId)) {
+          case (null) { Runtime.trap("Payout request not found") };
+          case (?request) {
+            requests.add(requestId, { request with status = #rejected });
+          };
         };
-
-        let updatedRequests = requestsArray.map(
-          func(req) {
-            switch (requestsArray.findIndex(func(x) { x == req })) {
-              case (?i) {
-                if (i == requestIndex) { { req with status = #rejected } } else { req };
-              };
-              case (null) { req };
-            };
-          }
-        );
-
-        requests.clear();
-        updatedRequests.forEach(func(req) { requests.add(req) });
       };
     };
   };
 
-  // Admin-only task management
   public shared ({ caller }) func addTask(title : Text, description : Text, reward : ?Nat) : async () {
-    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
       Runtime.trap("Unauthorized: Only admins can add tasks");
     };
 
@@ -293,10 +301,40 @@ actor {
     availableTasks.add(title, newTask);
   };
 
-  public query ({ caller }) func getAvailableTasks() : async [Task] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can view available tasks");
-    };
+  public query func getAvailableTasks() : async [Task] {
     availableTasks.values().toArray().map(func(task) { task });
+  };
+
+  public shared ({ caller }) func bulkAddTasks(tasks : [Task]) : async () {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can bulk add tasks");
+    };
+
+    for (task in tasks.values()) {
+      availableTasks.add(task.title, task);
+    };
+  };
+
+  // Approval-based user management functions
+  public query ({ caller }) func isCallerApproved() : async Bool {
+    AccessControl.hasPermission(accessControlState, caller, #admin) or UserApproval.isApproved(approvalState, caller);
+  };
+
+  public shared ({ caller }) func requestApproval() : async () {
+    UserApproval.requestApproval(approvalState, caller);
+  };
+
+  public shared ({ caller }) func setApproval(user : Principal, status : UserApproval.ApprovalStatus) : async () {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
+    };
+    UserApproval.setApproval(approvalState, user, status);
+  };
+
+  public query ({ caller }) func listApprovals() : async [UserApproval.UserApprovalInfo] {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
+    };
+    UserApproval.listApprovals(approvalState);
   };
 };

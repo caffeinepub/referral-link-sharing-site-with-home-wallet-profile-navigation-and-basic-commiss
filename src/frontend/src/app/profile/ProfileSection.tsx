@@ -7,12 +7,16 @@ import { Separator } from '@/components/ui/separator';
 import { Loader2, Save, User as UserIcon } from 'lucide-react';
 import { useUserProfile, useSaveUserProfile } from './useUserProfile';
 import { useAuth } from '../auth/useAuth';
+import { useIsAdmin } from '../auth/useIsAdmin';
 import SignOutButton from '../auth/SignOutButton';
+import AllowlistPanel from '../admin/allowlist/AllowlistPanel';
+import SignInRequiredNotice from '../auth/SignInRequiredNotice';
 import { toast } from 'sonner';
 
 export default function ProfileSection() {
-  const { principalString } = useAuth();
+  const { isAuthenticated, principalString } = useAuth();
   const { data: profile, isLoading, isFetched } = useUserProfile();
+  const { data: isAdmin, isLoading: isAdminLoading } = useIsAdmin();
   const saveMutation = useSaveUserProfile();
 
   const [name, setName] = useState('');
@@ -24,6 +28,11 @@ export default function ProfileSection() {
       setUpi(profile.upi);
     }
   }, [profile]);
+
+  // Show sign-in notice if not authenticated
+  if (!isAuthenticated) {
+    return <SignInRequiredNotice />;
+  }
 
   const handleSave = async () => {
     if (!name.trim()) {
@@ -130,6 +139,9 @@ export default function ProfileSection() {
           )}
         </CardContent>
       </Card>
+
+      {/* Admin-only allowlist management */}
+      {!isAdminLoading && isAdmin && <AllowlistPanel />}
 
       {/* Sign out */}
       <Card>

@@ -10,6 +10,17 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
+export type ApprovalStatus = { 'pending' : null } |
+  { 'approved' : null } |
+  { 'rejected' : null };
+export interface PayoutRequest {
+  'id' : bigint,
+  'status' : { 'pending' : null } |
+    { 'approved' : null } |
+    { 'rejected' : null },
+  'created' : Time,
+  'amount' : bigint,
+}
 export interface ReferralLink {
   'title' : string,
   'created' : Time,
@@ -22,6 +33,10 @@ export interface Task {
   'description' : string,
 }
 export type Time = bigint;
+export interface UserApprovalInfo {
+  'status' : ApprovalStatus,
+  'principal' : Principal,
+}
 export interface UserProfile { 'upi' : string, 'name' : string }
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
@@ -31,21 +46,35 @@ export interface _SERVICE {
   'addTask' : ActorMethod<[string, string, [] | [bigint]], undefined>,
   'approvePayoutRequest' : ActorMethod<[Principal, bigint], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
+  'bulkAddTasks' : ActorMethod<[Array<Task>], undefined>,
   'createReferralLink' : ActorMethod<
     [string, string, [] | [bigint]],
     undefined
+  >,
+  'getAllPayoutRequests' : ActorMethod<
+    [],
+    Array<[Principal, Array<PayoutRequest>]>
   >,
   'getAvailableTasks' : ActorMethod<[], Array<Task>>,
   'getBalance' : ActorMethod<[], bigint>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
+  'getMyPayoutRequests' : ActorMethod<[], [] | [Array<PayoutRequest>]>,
   'getReferralLinks' : ActorMethod<[], Array<ReferralLink>>,
+  'getUserPayoutRequests' : ActorMethod<
+    [Principal],
+    [] | [Array<PayoutRequest>]
+  >,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isAdmin' : ActorMethod<[], boolean>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
+  'isCallerApproved' : ActorMethod<[], boolean>,
+  'listApprovals' : ActorMethod<[], Array<UserApprovalInfo>>,
   'rejectPayoutRequest' : ActorMethod<[Principal, bigint], undefined>,
+  'requestApproval' : ActorMethod<[], undefined>,
   'requestPayout' : ActorMethod<[bigint], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
+  'setApproval' : ActorMethod<[Principal, ApprovalStatus], undefined>,
   'trackReferralClick' : ActorMethod<[Principal, string], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;

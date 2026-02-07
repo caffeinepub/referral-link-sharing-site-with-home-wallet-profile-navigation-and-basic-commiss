@@ -1,107 +1,26 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 9,
-  "summary": "Website for sharing app referral links and tracking earned commission, with a single designated owner/admin principal who has full access to manage the site, and a simple UI including Home, Wallet, Profile, plus an Available Tasks section where only the owner/admin can add/manage tasks.",
+  "projectStateVersion": 3,
+  "summary": "Project to add Google AdSense support via reusable ad components, inserted globally across all pages in the content area.",
   "architectural_notes": [
-    "Introduce roles/permissions (owner/admin vs regular user) to control who can create/manage referral links.",
-    "Set a fixed owner/admin Internet Identity principal (lv4e6-aruzu-to76z-gr2e6-edqal-fz764-2qtjs-57xeh-4ik7q-jkiek-zae) with full privileges; enforce owner-only permissions for site changes and task creation."
+    "AdSense script should load on all pages and be inserted in the content area via reusable ad components."
   ],
   "known_issues": [],
   "isFixRequest": false,
   "existing_features": [
     {
-      "id": "feature-create-a-simple-normal-ui-layout-with-a-bottom-navigation-bar-containing-three-tabs-home-wallet-and-profile-each-represented-with-an-icon-and-english-labels",
-      "title": "Create a simple, normal UI layout with a bottom navigation bar containing three tabs: Home, Wallet, and Profile, each represented with an icon and English labels.",
+      "id": "feature-create-reusable-google-adsense-react-components-that-can-be-used-across-the-app-including-a-a-component-that-ensures-the-adsense-script-is-loaded-only-once-per-page-load-using-the-provided-script-tag-and-b-a-reusable-ad-slot-component-that-renders-an-ins-class-adsbygoogle-element-with-configurable-props-e-g-ad-client-slot-id-format-responsive-and-triggers-adsbygoogle-rendering-safely",
+      "title": "Create reusable Google AdSense React components that can be used across the app, including (a) a component that ensures the AdSense script is loaded only once per page load using the provided script tag, and (b) a reusable ad slot component that renders an <ins class=\"adsbygoogle\"> element with configurable props (e.g., ad client, slot id, format, responsive) and triggers adsbygoogle rendering safely.",
       "reqIds": [
         "REQ-1"
       ],
       "version": 1
     },
     {
-      "id": "feature-implement-authentication-using-internet-identity-and-require-sign-in-to-create-referral-links-view-wallet-and-edit-profile",
-      "title": "Implement authentication using Internet Identity and require sign-in to create referral links, view Wallet, and edit Profile.",
+      "id": "feature-render-the-adsense-components-globally-across-the-app-in-the-main-content-area-on-all-pages-sections-so-that-ads-are-inserted-within-the-main-content-flow-not-in-the-html-head-ensure-this-global-insertion-applies-to-both-the-standard-section-based-ui-and-the-referral-redirect-route",
+      "title": "Render the AdSense components globally across the app in the main content area on all pages/sections, so that ads are inserted within the <main> content flow (not in the HTML <head>). Ensure this global insertion applies to both the standard section-based UI and the referral redirect route.",
       "reqIds": [
         "REQ-2"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-home-section-allow-a-signed-in-user-to-create-view-and-manage-referral-links-by-entering-a-a-title-b-a-destination-url-and-c-an-optional-commission-amount-note-show-a-list-of-the-user-s-links-with-a-copyable-share-url-for-each",
-      "title": "Home section: allow a signed-in user to create, view, and manage referral links by entering (a) a title, (b) a destination URL, and (c) an optional commission amount note; show a list of the user’s links with a copyable share URL for each.",
-      "reqIds": [
-        "REQ-3"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-implement-shareable-referral-urls-that-when-opened-record-a-click-event-against-the-associated-referral-link-and-then-redirect-the-visitor-to-the-destination-url",
-      "title": "Implement shareable referral URLs that, when opened, record a click event against the associated referral link and then redirect the visitor to the destination URL.",
-      "reqIds": [
-        "REQ-4"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-wallet-section-show-the-signed-in-user-s-current-balance-total-earned-and-a-simple-transaction-list-derived-from-tracked-events-e-g-link-click-events-and-manual-adjustments",
-      "title": "Wallet section: show the signed-in user’s current balance, total earned, and a simple transaction list derived from tracked events (e.g., link click events and manual adjustments).",
-      "reqIds": [
-        "REQ-5"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-add-a-upi-payout-option-in-profile-allow-the-user-to-save-a-upi-id-in-wallet-allow-the-user-to-submit-a-payout-request-for-an-amount-up-to-their-available-balance-storing-the-request-in-the-backend-with-a-status-e-g-pending-approved-rejected",
-      "title": "Add a UPI payout option: in Profile, allow the user to save a UPI ID; in Wallet, allow the user to submit a payout request for an amount up to their available balance, storing the request in the backend with a status (e.g., Pending/Approved/Rejected).",
-      "reqIds": [
-        "REQ-6"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-profile-section-show-basic-account-info-principal-and-provide-sign-out-include-settings-for-upi-id-management",
-      "title": "Profile section: show basic account info (principal) and provide sign out; include settings for UPI ID management.",
-      "reqIds": [
-        "REQ-7"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-apply-one-coherent-visual-theme-for-a-simple-normal-interface-colors-typography-spacing-and-component-styling-and-use-it-consistently-across-home-wallet-and-profile-avoid-blue-purple-as-the-primary-palette",
-      "title": "Apply one coherent visual theme for a simple, normal interface (colors, typography, spacing, and component styling) and use it consistently across Home, Wallet, and Profile; avoid blue/purple as the primary palette.",
-      "reqIds": [
-        "REQ-8"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-update-the-home-ui-so-that-only-the-owner-admin-can-see-and-use-the-create-referral-link-form-for-non-admin-users-replace-the-form-with-a-clear-read-only-message-in-english-indicating-that-only-the-owner-can-create-referral-links",
-      "title": "Update the Home UI so that only the owner/admin can see and use the “Create Referral Link” form. For non-admin users, replace the form with a clear read-only message in English indicating that only the owner can create referral links.",
-      "reqIds": [
-        "REQ-11"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-add-an-available-tasks-option-to-the-bottom-navigation-and-implement-an-available-tasks-section-screen-that-displays-all-tasks-returned-by-the-backend",
-      "title": "Add an “Available Tasks” option to the bottom navigation and implement an “Available Tasks” section/screen that displays all tasks returned by the backend.",
-      "reqIds": [
-        "REQ-13"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-update-the-home-screen-ui-frontend-src-app-home-homesection-tsx-to-remove-the-current-home-header-text-and-remove-the-inline-create-referral-link-card-from-the-main-home-layout-so-the-home-screen-focuses-only-on-displaying-the-user-s-ongoing-items-treat-existing-referral-links-as-the-ongoing-tasks-list",
-      "title": "Update the Home screen UI (frontend/src/app/home/HomeSection.tsx) to remove the current Home header text and remove the inline “Create Referral Link” card from the main Home layout, so the Home screen focuses only on displaying the user’s ongoing items (treat existing referral links as the “ongoing tasks” list).",
-      "reqIds": [
-        "REQ-14"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-add-a-clear-call-to-action-area-under-the-ongoing-referral-link-list-on-home-that-includes-1-a-see-all-referral-links-action-and-2-a-tasks-navigation-action-additionally-provide-an-admin-only-upload-referral-link-action-located-under-within-the-see-all-referral-links-area-to-allow-the-owner-admin-to-create-a-referral-link-without-restoring-the-old-inline-form",
-      "title": "Add a clear call-to-action area under the ongoing referral link list on Home that includes (1) a “See all referral links” action and (2) a “Tasks” navigation action; additionally, provide an admin-only “Upload Referral Link” action located under/within the “See all referral links” area to allow the owner/admin to create a referral link without restoring the old inline form.",
-      "reqIds": [
-        "REQ-15"
       ],
       "version": 1
     }
@@ -109,72 +28,12 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Build a website where users can share app referral links and earn commission when others use the links.",
+      "summary": "Add Google AdSense script site-wide via reusable ad components, placed in the content area on all pages",
       "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-2",
-      "summary": "Include UPI option for commission payout and/or redirecting users to a UPI flow related to referral usage.",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-3",
-      "summary": "Create a simple UI with bottom navigation: Home, Wallet, Profile.",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-4",
-      "summary": "Add role-based access so only the owner/admin can upload/create/manage referral links; regular users cannot upload referral links.",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-5",
-      "summary": "Add an 'Available Tasks' option/section that shows a list of all tasks.",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-6",
-      "summary": "Update backend authorization so only the owner/admin can create (upload) referral links; regular signed-in users must be blocked server-side from creating referral links.",
-      "reqIds": [
-        "REQ-9"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-7",
-      "summary": "Expose a backend API that allows the frontend to determine whether the current caller is an owner/admin (e.g., a query returning an isAdmin boolean).",
-      "reqIds": [
-        "REQ-10"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-9",
-      "summary": "Add an “Available Tasks” feature in the backend that stores a list of tasks and provides an API for clients to fetch all tasks.",
-      "reqIds": [
-        "REQ-12"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-10",
-      "summary": "Update Home page UI to clear/remove current elements and show only 'ongoing tasks' (i.e., referral link tasks in progress); provide a Tasks option/link under 'See all referral links' for the owner/admin to upload/manage referral links.",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-11",
-      "summary": "Designate a single owner/admin account (principal) with full access; only this account can change/manage the website and add tasks (admin-only task creation).",
-      "reqIds": [],
-      "status": "pending"
+      "status": "in_progress"
     }
   ],
-  "projectName": "Referral link sharing site with Home/Wallet/Profile navigation and basic commission tracking",
+  "projectName": "Add Google AdSense via reusable ad components rendered globally in the content area",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

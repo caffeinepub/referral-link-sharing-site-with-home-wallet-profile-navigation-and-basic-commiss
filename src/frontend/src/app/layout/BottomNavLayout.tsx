@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
 import { Home, Wallet, User, ListTodo } from 'lucide-react';
+import GlobalContentAds from '../ads/GlobalContentAds';
 
 interface BottomNavLayoutProps {
   children: ReactNode;
@@ -20,6 +21,7 @@ export default function BottomNavLayout({ children, currentSection, onNavigate }
       {/* Main content area */}
       <main className="flex-1 overflow-y-auto pb-20">
         {children}
+        <GlobalContentAds />
       </main>
 
       {/* Bottom navigation */}

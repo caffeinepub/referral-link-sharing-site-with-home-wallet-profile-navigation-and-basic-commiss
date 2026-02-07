@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { useReferralRedirect } from './useReferralRedirect';
+import GlobalContentAds from '../ads/GlobalContentAds';
 
 export default function ReferralRedirect() {
   const { status, destinationUrl, error } = useReferralRedirect();
@@ -14,7 +15,7 @@ export default function ReferralRedirect() {
 
   if (status === 'loading') {
     return (
-      <div className="flex items-center justify-center min-h-screen p-4">
+      <main className="flex flex-col items-center justify-center min-h-screen p-4">
         <Card className="w-full max-w-md">
           <CardContent className="pt-6 text-center">
             <Loader2 className="w-12 h-12 animate-spin mx-auto mb-4 text-primary" />
@@ -24,13 +25,14 @@ export default function ReferralRedirect() {
             </p>
           </CardContent>
         </Card>
-      </div>
+        <GlobalContentAds />
+      </main>
     );
   }
 
   if (status === 'error') {
     return (
-      <div className="flex items-center justify-center min-h-screen p-4">
+      <main className="flex flex-col items-center justify-center min-h-screen p-4">
         <Card className="w-full max-w-md">
           <CardHeader>
             <div className="flex items-center gap-2 text-destructive">
@@ -40,7 +42,8 @@ export default function ReferralRedirect() {
             <CardDescription>{error || 'This referral link is not valid'}</CardDescription>
           </CardHeader>
         </Card>
-      </div>
+        <GlobalContentAds />
+      </main>
     );
   }
 

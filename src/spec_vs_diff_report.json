@@ -1,54 +1,27 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-05T19:58:04.036Z",
-  "summary": "BuildRequest contains no stated requirements or acceptance criteria, so there are no identifiable missing requirements. The diff introduces new Tasks admin functionality (UI + hooks) and backend state/API changes, which are not requested by the BuildRequest.",
-  "missing_requirements": [],
-  "hallucinated_features": [
+  "generatedAt": "2026-02-07T05:06:50.344Z",
+  "summary": "Diff adds reusable AdSense components (script loader + ad slot) and inserts them into the main content flow for the standard BottomNav layout and for the referral redirect route’s loading/error states. One potential gap is that the referral redirect route renders no content (and thus no ad insertion) in the success state before navigation.",
+  "missing_requirements": [
     {
-      "description": "Add Task dialog UI for creating new tasks (title/description/reward) with validation and toast notifications.",
-      "reason": "No requirements were specified in the BuildRequest, but new task-creation UI was added.",
+      "id": "REQ-2",
+      "requirement": "Ensure the referral redirect route (currentSection starting with \"r/\") still includes the content-area ad insertion without interfering with redirect behavior.",
+      "reason": "In the referral redirect component, ads are rendered only for the \"loading\" and \"error\" UI branches. When status is \"success\", the component returns null, so there is no <main>-content ad insertion present during the success/redirect state.",
       "evidence": [
-        "frontend/src/app/tasks/AddTaskDialog.tsx"
-      ]
-    },
-    {
-      "description": "Admin-gated \"Add Task\" button and dialog wiring in the Tasks section, including loading skeleton for admin check.",
-      "reason": "No requirements were specified in the BuildRequest, but Tasks page behavior was expanded with admin-only task creation entrypoint.",
-      "evidence": [
-        "frontend/src/app/tasks/TasksSection.tsx"
-      ]
-    },
-    {
-      "description": "React Query hooks to fetch available tasks and perform addTask mutation with cache invalidation.",
-      "reason": "No requirements were specified in the BuildRequest, but tasks data fetching/mutation hooks were added/extended.",
-      "evidence": [
-        "frontend/src/app/tasks/useAvailableTasks.ts"
-      ]
-    },
-    {
-      "description": "Admin-check hook calling backend isAdmin().",
-      "reason": "No requirements were specified in the BuildRequest, but a new admin status query hook was added/modified.",
-      "evidence": [
-        "frontend/src/app/auth/useIsAdmin.ts"
-      ]
-    },
-    {
-      "description": "Backend changes introducing/maintaining persistent state for tasks and admin API (e.g., availableTasks map, Task type, isAdmin query) alongside other state/migration-related adjustments.",
-      "reason": "No requirements were specified in the BuildRequest, but backend logic/state was changed and task-related structures/admin API are present in the diff.",
-      "evidence": [
-        "backend/main.mo"
+        "frontend/src/app/referral/ReferralRedirect.tsx (GlobalContentAds present in loading/error returns; final `return null;` for other states including success)"
       ]
     }
   ],
+  "hallucinated_features": [],
   "confidence": 0.74,
   "changed_files": [
-    "backend/main.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/app/auth/useIsAdmin.ts",
-    "frontend/src/app/tasks/AddTaskDialog.tsx",
-    "frontend/src/app/tasks/TasksSection.tsx",
-    "frontend/src/app/tasks/useAvailableTasks.ts",
+    "frontend/src/app/ads/AdSenseScript.tsx",
+    "frontend/src/app/ads/AdSlot.tsx",
+    "frontend/src/app/ads/GlobalContentAds.tsx",
+    "frontend/src/app/layout/BottomNavLayout.tsx",
+    "frontend/src/app/referral/ReferralRedirect.tsx",
     "project_state.json"
   ]
 }

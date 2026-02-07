@@ -18,13 +18,32 @@ export const Task = IDL.Record({
   'title' : IDL.Text,
   'description' : IDL.Text,
 });
-export const UserProfile = IDL.Record({ 'upi' : IDL.Text, 'name' : IDL.Text });
 export const Time = IDL.Int;
+export const PayoutRequest = IDL.Record({
+  'id' : IDL.Nat,
+  'status' : IDL.Variant({
+    'pending' : IDL.Null,
+    'approved' : IDL.Null,
+    'rejected' : IDL.Null,
+  }),
+  'created' : Time,
+  'amount' : IDL.Nat,
+});
+export const UserProfile = IDL.Record({ 'upi' : IDL.Text, 'name' : IDL.Text });
 export const ReferralLink = IDL.Record({
   'title' : IDL.Text,
   'created' : Time,
   'commission' : IDL.Opt(IDL.Nat),
   'destinationUrl' : IDL.Text,
+});
+export const ApprovalStatus = IDL.Variant({
+  'pending' : IDL.Null,
+  'approved' : IDL.Null,
+  'rejected' : IDL.Null,
+});
+export const UserApprovalInfo = IDL.Record({
+  'status' : ApprovalStatus,
+  'principal' : IDL.Principal,
 });
 
 export const idlService = IDL.Service({
@@ -32,16 +51,32 @@ export const idlService = IDL.Service({
   'addTask' : IDL.Func([IDL.Text, IDL.Text, IDL.Opt(IDL.Nat)], [], []),
   'approvePayoutRequest' : IDL.Func([IDL.Principal, IDL.Nat], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+  'bulkAddTasks' : IDL.Func([IDL.Vec(Task)], [], []),
   'createReferralLink' : IDL.Func(
       [IDL.Text, IDL.Text, IDL.Opt(IDL.Nat)],
       [],
       [],
     ),
+  'getAllPayoutRequests' : IDL.Func(
+      [],
+      [IDL.Vec(IDL.Tuple(IDL.Principal, IDL.Vec(PayoutRequest)))],
+      ['query'],
+    ),
   'getAvailableTasks' : IDL.Func([], [IDL.Vec(Task)], ['query']),
   'getBalance' : IDL.Func([], [IDL.Nat], ['query']),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+  'getMyPayoutRequests' : IDL.Func(
+      [],
+      [IDL.Opt(IDL.Vec(PayoutRequest))],
+      ['query'],
+    ),
   'getReferralLinks' : IDL.Func([], [IDL.Vec(ReferralLink)], ['query']),
+  'getUserPayoutRequests' : IDL.Func(
+      [IDL.Principal],
+      [IDL.Opt(IDL.Vec(PayoutRequest))],
+      ['query'],
+    ),
   'getUserProfile' : IDL.Func(
       [IDL.Principal],
       [IDL.Opt(UserProfile)],
@@ -49,9 +84,13 @@ export const idlService = IDL.Service({
     ),
   'isAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+  'isCallerApproved' : IDL.Func([], [IDL.Bool], ['query']),
+  'listApprovals' : IDL.Func([], [IDL.Vec(UserApprovalInfo)], ['query']),
   'rejectPayoutRequest' : IDL.Func([IDL.Principal, IDL.Nat], [], []),
+  'requestApproval' : IDL.Func([], [], []),
   'requestPayout' : IDL.Func([IDL.Nat], [], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+  'setApproval' : IDL.Func([IDL.Principal, ApprovalStatus], [], []),
   'trackReferralClick' : IDL.Func([IDL.Principal, IDL.Text], [], []),
 });
 
@@ -68,13 +107,32 @@ export const idlFactory = ({ IDL }) => {
     'title' : IDL.Text,
     'description' : IDL.Text,
   });
-  const UserProfile = IDL.Record({ 'upi' : IDL.Text, 'name' : IDL.Text });
   const Time = IDL.Int;
+  const PayoutRequest = IDL.Record({
+    'id' : IDL.Nat,
+    'status' : IDL.Variant({
+      'pending' : IDL.Null,
+      'approved' : IDL.Null,
+      'rejected' : IDL.Null,
+    }),
+    'created' : Time,
+    'amount' : IDL.Nat,
+  });
+  const UserProfile = IDL.Record({ 'upi' : IDL.Text, 'name' : IDL.Text });
   const ReferralLink = IDL.Record({
     'title' : IDL.Text,
     'created' : Time,
     'commission' : IDL.Opt(IDL.Nat),
     'destinationUrl' : IDL.Text,
+  });
+  const ApprovalStatus = IDL.Variant({
+    'pending' : IDL.Null,
+    'approved' : IDL.Null,
+    'rejected' : IDL.Null,
+  });
+  const UserApprovalInfo = IDL.Record({
+    'status' : ApprovalStatus,
+    'principal' : IDL.Principal,
   });
   
   return IDL.Service({
@@ -82,16 +140,32 @@ export const idlFactory = ({ IDL }) => {
     'addTask' : IDL.Func([IDL.Text, IDL.Text, IDL.Opt(IDL.Nat)], [], []),
     'approvePayoutRequest' : IDL.Func([IDL.Principal, IDL.Nat], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+    'bulkAddTasks' : IDL.Func([IDL.Vec(Task)], [], []),
     'createReferralLink' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Opt(IDL.Nat)],
         [],
         [],
       ),
+    'getAllPayoutRequests' : IDL.Func(
+        [],
+        [IDL.Vec(IDL.Tuple(IDL.Principal, IDL.Vec(PayoutRequest)))],
+        ['query'],
+      ),
     'getAvailableTasks' : IDL.Func([], [IDL.Vec(Task)], ['query']),
     'getBalance' : IDL.Func([], [IDL.Nat], ['query']),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+    'getMyPayoutRequests' : IDL.Func(
+        [],
+        [IDL.Opt(IDL.Vec(PayoutRequest))],
+        ['query'],
+      ),
     'getReferralLinks' : IDL.Func([], [IDL.Vec(ReferralLink)], ['query']),
+    'getUserPayoutRequests' : IDL.Func(
+        [IDL.Principal],
+        [IDL.Opt(IDL.Vec(PayoutRequest))],
+        ['query'],
+      ),
     'getUserProfile' : IDL.Func(
         [IDL.Principal],
         [IDL.Opt(UserProfile)],
@@ -99,9 +173,13 @@ export const idlFactory = ({ IDL }) => {
       ),
     'isAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+    'isCallerApproved' : IDL.Func([], [IDL.Bool], ['query']),
+    'listApprovals' : IDL.Func([], [IDL.Vec(UserApprovalInfo)], ['query']),
     'rejectPayoutRequest' : IDL.Func([IDL.Principal, IDL.Nat], [], []),
+    'requestApproval' : IDL.Func([], [], []),
     'requestPayout' : IDL.Func([IDL.Nat], [], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+    'setApproval' : IDL.Func([IDL.Principal, ApprovalStatus], [], []),
     'trackReferralClick' : IDL.Func([IDL.Principal, IDL.Text], [], []),
   });
 };
